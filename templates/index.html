@@ -1,0 +1,246 @@
+{% extends "layout.html" %}
+{% block content %}
+<nav>
+  <div class="logo">Verse <span>Space</span></div>
+  <ul class="nav-links">
+    <li><a href="#" data-action="scroll-how">How it works</a></li>
+    <li><a href="#" data-action="scroll-poets">Poets reviews</a></li>
+    <li><a href="#poet-requests" data-action="scroll-requests">Requests board</a></li>
+    <li><a href="#" data-action="open-portfolio">For poets</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-text">
+    <div class="eyebrow">A marketplace for poetry</div>
+    <h1>Words crafted <em>just</em> for you</h1>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-btns">
+      <a href="#" class="btn-primary" data-action="open-request">Request a poem</a>
+      <a href="#" class="btn-outline" data-action="open-poet">Become a poet</a>
+      <p>Request a poem for any occasion : weddings, birthdays, grief, love, or just life. <br> Our poets bring your story to life.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how-it-works">
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Post your request</h3>
+      <p>Describe the occasion, the feeling, the person. The more you share, the more personal the poem. Set your budget and deadline.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Poets bid on your request</h3>
+      <p>Verified poets browse requests and submit proposals — including a short sample verse and their quote. You choose who to work with.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>Receive your poem</h3>
+      <p>Your chosen poet crafts a poem. Review it, request revisions, and release payment.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section poets-section" id="poets">
+  <div class="section-label"><h2>Poets reviews</h2></div>
+  <div class="poets-grid">
+    <div class="poet-card">
+      <div class="poet-header">
+        <div class="poet-img">M</div>
+        <div>
+          <div class="name">Maria</div>
+          <div class="specialty">Memory</div>
+        </div>
+      </div>
+      <div class="stars">★★★★★</div>
+      <div class="poet-quote">"She found the exact words I didn't know I needed. My mother would have wept in the best way."</div>
+      <div class="poet-rate">From €40 · 48hr delivery</div>
+    </div>
+    <div class="poet-card">
+      <div class="poet-header">
+        <div class="poet-img">J</div>
+        <div>
+          <div class="name">Julian Voss</div>
+          <div class="specialty">Love & Weddings</div>
+        </div>
+      </div>
+      <div class="stars">★★★★★</div>
+      <div class="poet-quote">"Our vows poem made the whole room go silent. Julian captured our entire relationship in twelve lines."</div>
+      <div class="poet-rate">From €55 · 72hr delivery</div>
+    </div>
+    <div class="poet-card">
+      <div class="poet-header">
+        <div class="poet-img">S</div>
+        <div>
+          <div class="name">Sana Mir</div>
+          <div class="specialty">Humor & Celebration</div>
+        </div>
+      </div>
+      <div class="stars">★★★★★</div>
+      <div class="poet-quote">"Our whole office laughed until they cried. The retirement poem was absolutely perfect — sharp and warm."</div>
+      <div class="poet-rate">From €30 · 24hr delivery</div>
+    </div>
+  </div>
+</section>
+
+<section class="section requests-section" id="poet-requests">
+  <div class="section-label"><h2>Requests board</h2></div>
+  <div class="requests-head">
+    <div>
+      <p>See the latest client requests and pick the stories that match your voice.</p>
+    </div>
+    <button type="button" class="btn-outline requests-refresh" data-action="refresh-requests">Refresh</button>
+  </div>
+  <div id="requests-board" class="requests-board" aria-live="polite"></div>
+  <div class="requests-pagination" id="requests-pagination" aria-live="polite">
+    <button type="button" class="btn-outline pagination-btn" id="requests-prev-btn" data-action="requests-prev">Previous</button>
+    <span class="pagination-status" id="requests-page-status">Page 1 of 1</span>
+    <button type="button" class="btn-outline pagination-btn" id="requests-next-btn" data-action="requests-next">Next</button>
+  </div>
+</section>
+
+<div class="modal-overlay hidden" id="request-modal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="request-modal-title">
+    <div class="modal-header">
+      <h3 id="request-modal-title">Request a poem</h3>
+      <button type="button" class="close-icon" data-close="request-modal" aria-label="Close request form">×</button>
+    </div>
+    <form action="/request" method="post" id="request-form" class="form-grid">
+      <label>Occasion
+        <input name="occasion" type="text" placeholder="Wedding, birthday, memorial..." required>
+      </label>
+      <label>Tone
+        <select name="tone" required>
+          <option value="warm">Warm</option>
+          <option value="romantic">Romantic</option>
+          <option value="hopeful">Hopeful</option>
+          <option value="reflective">Reflective</option>
+        </select>
+      </label>
+      <label>For who?
+        <input name="subject" type="text" placeholder="My partner, my friend, my cat ;)" required>
+      </label>
+      <label>Key memory or detail
+        <textarea name="detail" rows="3" placeholder="A moment, phrase, or image to include" required></textarea>
+      </label>
+      <label>Budget (€)
+        <input name="budget" type="number" min="5" max="500" step="1" value="5" required>
+      </label>
+        <button type="button" class="btn-small outline" data-close="request-modal">Cancel</button>
+        <button type="submit" class="btn-small">Submit request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="portfolio-modal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="portfolio-modal-title">
+    <div class="modal-header">
+      <h3 id="portfolio-modal-title">Poet portfolio snapshot</h3>
+      <button type="button" class="close-icon" data-close="portfolio-modal" aria-label="Close poet portfolio">×</button>
+    </div>
+    <div class="portfolio-grid">
+      <div class="poet-card">
+        <div class="poet-header">
+          <div class="poet-img">PN</div>
+          <div>
+            <div class="name">Paul Noir</div>
+            <div class="specialty">Submited requests:</div>
+          </div>
+        </div>
+        <div class="poet-quote">""</div>
+        <div class="poet-rate">From €40 · 48hr delivery</div>
+      </div>
+      <div class="poet-card">
+        <div class="poet-header">
+          <div class="poet-img">JD</div>
+          <div>
+            <div class="name">Joe Doe</div>
+            <div class="specialty">Submited requests:</div>
+          </div>
+        </div>
+        <div class="poet-quote">"-"</div>
+        <div class="poet-rate">From €55 · 72hr delivery</div>
+      </div>
+      <div class="poet-card">
+        <div class="poet-header">
+          <div class="poet-img">SM</div>
+          <div>
+            <div class="name">Sana Mir</div>
+            <div class="specialty">Submited requests:</div>
+          </div>
+        </div>
+        <div class="poet-quote">"-"</div>
+        <div class="poet-rate">From €30 · 24hr delivery</div>
+      </div>
+      <div class="poet-card">
+        <div class="poet-header">
+          <div class="poet-img">LM</div>
+          <div>
+            <div class="name">Luca Mariaci</div>
+            <div class="specialty">Submited requests:</div>
+          </div>
+        </div>
+        <div class="poet-quote">"-"</div>
+        <div class="poet-rate">From €45 · 36hr delivery</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-small outline" data-close="portfolio-modal">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="poet-modal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="poet-modal-title">
+    <div class="modal-header">
+      <h3 id="poet-modal-title">Become a poet</h3>
+      <button type="button" class="close-icon" data-close="poet-modal" aria-label="Close poet form">×</button>
+    </div>
+    <form id="poet-form" class="form-grid">
+      <label>Your name
+        <input name="name" type="text" placeholder="Alex Rivera" required>
+      </label>
+      <label>Email
+  <input name="email" type="email" placeholder="you@example.com" required>
+</label>
+      <label>Specialty
+        <input name="specialty" type="text" placeholder="Love, grief, celebration..." required>
+      </label>
+      <label>Sample line
+        <textarea name="sample" rows="3" placeholder="Write one line in your voice" required></textarea>
+      </label>
+      <label>Starting rate (€)
+        <input name="rate" type="number" min="10" max="500" step="1" value="35" required>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-small outline" data-close="poet-modal">Cancel</button>
+        <button type="submit" class="btn-small">Submit application</button>
+      </div>
+    </form>
+    <div class="modal-divider"></div>
+    <div class="poet-modal-board">
+      <div class="modal-subtitle">Open requests</div>
+      <div class="form-note">After registering, apply to any request with an amount equal or higher than the requested amount.</div>
+      <div id="poet-modal-requests-board" class="requests-board modal-requests-board" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+<footer>
+  <span>© 2026 VerseCraft. All rights reserved.</span>
+  <ul class="footer-links">
+    <li><a href="#" data-action="scroll-how">About</a></li>
+    <li><a href="#" data-action="show-info" data-topic="privacy">Privacy</a></li>
+    <li><a href="#" data-action="show-info" data-topic="terms">Terms</a></li>
+    <li><a href="#" data-action="show-info" data-topic="contact">Contact</a></li>
+  </ul>
+</footer>
+
+{% endblock %}
