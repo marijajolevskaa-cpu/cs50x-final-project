@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS poem_bids (
   poet_id INTEGER NOT NULL,
   amount INTEGER NOT NULL,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (request_id, poet_id),
   FOREIGN KEY (request_id) REFERENCES poem_requests(id) ON DELETE CASCADE,
   FOREIGN KEY (poet_id) REFERENCES poet_applications(id) ON DELETE CASCADE
 );
