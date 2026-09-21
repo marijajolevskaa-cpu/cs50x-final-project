@@ -1,0 +1,10 @@
+# Database (local data, not code)
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment
+venv/
+.venv/

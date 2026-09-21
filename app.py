@@ -69,6 +69,10 @@ def get_db() -> sqlite3.Connection:
     # Makes rows behave like dicts so you can write row["occasion"]
     # instead of row[1] — much more readable and less error-prone
 
+    conn.execute('PRAGMA foreign_keys = ON')
+    # Enforce foreign keys on EVERY connection (SQLite defaults to OFF).
+    # Without this, the ON DELETE CASCADE rules in schema.sql do not fire.
+
     return conn
 
 
@@ -315,6 +319,16 @@ def create_bid(request_id: int):
 
         if poet_row is None:
             return json_error("Poet profile not found. Please register first.", 404)
+
+        already_bid = conn.execute(
+            "SELECT id FROM poem_bids WHERE request_id = ? AND poet_id = ?",
+            (request_id, poet_id),
+        ).fetchone()
+        # Enforce one bid per poet per request. The UNIQUE constraint in
+        # schema.sql guarantees this at the database level; this check returns
+        # a friendly 409 instead of letting the INSERT raise an error.
+        if already_bid is not None:
+            return json_error("You have already applied to this request.", 409)
 
         minimum_amount = int(request_row["total_price"])
         if amount < minimum_amount:
