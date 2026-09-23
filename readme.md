@@ -62,10 +62,39 @@ Correctness is enforced on the server, not just in the UI:
   minimum budget/bid amounts are all checked on the backend, which is treated as
   the authoritative source of truth even though the frontend validates too.
 
+## Testing
+
+The backend has an automated test suite (`test_api.py`, run with `pytest`) that
+exercises the REST API directly using Flask's test client. Each test runs against
+a fresh temporary SQLite database, so tests are fully isolated and repeatable and
+never touch real data.
+
+Coverage includes:
+
+- **Smoke test** — the health endpoint responds.
+- **Happy paths** — creating a poet, creating a request, and placing a valid bid.
+- **The bid rule, both sides** — a poet cannot bid twice on the same request
+  (expects `409`), and the same poet *can* bid on two different requests
+  (expects `201`), which proves the rule is scoped per request rather than
+  "one bid ever."
+- **Validation & error cases** — an invalid tone is rejected (`400`), a missing
+  required field is rejected (`400`), a bid below the request minimum is rejected
+  (`400`), and bids referencing a non-existent request or poet are rejected
+  (`404`).
+
+The double-bid test doubles as a **regression guard**: if the uniqueness rule is
+ever removed, the test fails immediately.
+
+```bash
+pip install pytest
+pytest -v
+```
+
 ## Tech stack
 
 **Backend:** Python · Flask · SQLite
 **Frontend:** HTML · CSS · Vanilla JavaScript (async `fetch`, no frameworks)
+**Testing:** pytest · Flask test client
 
 ## REST API
 
@@ -91,6 +120,7 @@ the schema initialized from `schema.sql`. The `poem_bids` table enforces
 project/
 ├── app.py              # Flask app + API routes
 ├── schema.sql          # database schema
+├── test_api.py         # pytest API test suite
 ├── templates/
 │   ├── layout.html
 │   └── index.html
@@ -105,11 +135,14 @@ project/
 Requires Python 3.
 
 ```bash
-# install Flask
-pip install flask
+# install dependencies
+pip install flask pytest
 
 # run the app (creates the SQLite database on first run)
 python app.py
+
+# run the tests
+pytest -v
 ```
 
 Then open the address it prints (`http://127.0.0.1:5050`).
@@ -118,4 +151,5 @@ Then open the address it prints (`http://127.0.0.1:5050`).
 
 *CS50 final project — a full-stack web application demonstrating REST API design,
 relational data modeling with enforced integrity constraints, server-side
-validation, and an async, framework-free JavaScript frontend.*
+validation, and an automated pytest suite covering happy paths, business rules,
+and error cases.*
