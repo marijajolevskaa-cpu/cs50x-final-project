@@ -9,7 +9,8 @@ personalized poems, and registered poets browse those requests and bid to fulfil
 them. I built it as my CS50 final project to practise designing a complete
 application end to end — a relational database, a JSON REST API, and a reactive
 single-page interface — using Flask and vanilla JavaScript, with no front-end
-frameworks.
+frameworks. It also includes a **third-party AI integration** and an automated test
+suite covering both the backend and the browser.
 
 ---
 
@@ -44,57 +45,74 @@ asynchronously through the API and updates the interface in place.
 - **Reactive frontend without a framework** — modals, async form submission, live
   board refresh, dynamic pagination, and toast notifications, all in plain
   JavaScript.
+- **Third-party AI integration** — an "AI suggestions" feature that calls an
+  external LLM API to help clients write clearer requests (see below).
 - **Relational data model** — requests, poets, and bids as related tables.
+
+## Third-party AI integration
+
+VerseSpace integrates an external LLM API to suggest improvements to a client's
+draft request — helping clients write clearer requests so human poets can bid
+better. The integration is **assistive, not a replacement**: it never writes poems,
+so it supports the marketplace rather than undermining the value of human poets.
+
+Implementation details that matter:
+- **Authentication** via a Bearer token, with the API key and URL read from
+  **environment variables** — no secrets hardcoded or committed.
+- **Error handling with graceful degradation** — if the external service is
+  unavailable, the endpoint returns a clean `503` and the UI shows a friendly
+  message instead of breaking.
+- The integration logic lives in its own module (`ai_helper.py`), isolated so it is
+  easy to reason about and to mock in tests.
 
 ## Data integrity & validation
 
 Correctness is enforced on the server, not just in the UI:
 
-- **Parameterized queries everywhere** — every SQL statement uses bound parameters,
-  so user input can never be executed as SQL (no injection).
+- **Parameterized queries everywhere** — user input can never be executed as SQL.
 - **One bid per poet per request** — guaranteed by a `UNIQUE (request_id, poet_id)`
-  constraint in the schema, with an application-level check that returns a clean
-  `409 Conflict` ("you have already applied") instead of a database error.
-- **Foreign keys with cascade deletes** — bids reference requests and poets with
-  `ON DELETE CASCADE`, and foreign-key enforcement is enabled on every connection
-  so referential integrity actually holds at runtime.
+  constraint, with an application-level check returning a clean `409 Conflict`.
+- **Foreign keys with cascade deletes**, enforced on every connection.
 - **Server-side validation** — required fields, an allowlist of valid tones, and
-  minimum budget/bid amounts are all checked on the backend, which is treated as
-  the authoritative source of truth even though the frontend validates too.
+  minimum budget/bid amounts, all checked on the authoritative backend.
 
 ## Testing
 
-The backend has an automated test suite (`test_api.py`, run with `pytest`) that
-exercises the REST API directly using Flask's test client. Each test runs against
-a fresh temporary SQLite database, so tests are fully isolated and repeatable and
-never touch real data.
+The project is tested at **two layers with two frameworks** — the way a real
+application is tested.
 
-Coverage includes:
+**Backend — pytest (`test_api.py`).** API tests using Flask's test client, each
+against a fresh temporary SQLite database for full isolation. Coverage includes:
+- Happy paths (create poet, create request, place a bid).
+- The bid rule, both sides — a poet cannot bid twice on the same request (`409`),
+  and the same poet *can* bid on different requests (`201`).
+- Validation & error cases — invalid tone (`400`), missing field (`400`), bid below
+  minimum (`400`), bids on a non-existent request or poet (`404`).
+- The AI integration — the external call is **mocked** (`unittest.mock`) to test both
+  the success path and graceful failure (`503`), with no real API call.
 
-- **Smoke test** — the health endpoint responds.
-- **Happy paths** — creating a poet, creating a request, and placing a valid bid.
-- **The bid rule, both sides** — a poet cannot bid twice on the same request
-  (expects `409`), and the same poet *can* bid on two different requests
-  (expects `201`), which proves the rule is scoped per request rather than
-  "one bid ever."
-- **Validation & error cases** — an invalid tone is rejected (`400`), a missing
-  required field is rejected (`400`), a bid below the request minimum is rejected
-  (`400`), and bids referencing a non-existent request or poet are rejected
-  (`404`).
-
-The double-bid test doubles as a **regression guard**: if the uniqueness rule is
-ever removed, the test fails immediately.
+**Frontend — Cypress (`cypress/e2e/`).** End-to-end tests that drive the real UI in
+a browser and use **`cy.intercept()`** to mock the AI API at the network level —
+testing that the interface shows the suggestions on success and a friendly message
+on failure, without any real service.
 
 ```bash
-pip install pytest
+# backend tests
+pip install -r requirements.txt
 pytest -v
+
+# frontend tests (app must be running in another terminal)
+npm install
+npx cypress open      # interactive runner
+# or: npx cypress run  # headless
 ```
 
 ## Tech stack
 
 **Backend:** Python · Flask · SQLite
 **Frontend:** HTML · CSS · Vanilla JavaScript (async `fetch`, no frameworks)
-**Testing:** pytest · Flask test client
+**Integration:** external LLM REST API (Bearer-token auth, env-var config)
+**Testing:** pytest · Flask test client · Cypress (`cy.intercept`)
 
 ## REST API
 
@@ -106,6 +124,7 @@ pytest -v
 | `POST` | `/api/poets` | Register a poet |
 | `POST` | `/api/requests/<id>/bids` | Submit a bid on a request |
 | `GET`  | `/api/poets/<id>/bids` | List a poet's bids |
+| `POST` | `/api/suggest-improvements` | AI suggestions for a draft request |
 | `GET`  | `/api/health` | Health check |
 
 ## Database
@@ -119,37 +138,28 @@ the schema initialized from `schema.sql`. The `poem_bids` table enforces
 ```
 project/
 ├── app.py              # Flask app + API routes
+├── ai_helper.py        # third-party LLM integration
 ├── schema.sql          # database schema
-├── test_api.py         # pytest API test suite
-├── templates/
-│   ├── layout.html
-│   └── index.html
-├── static/
-│   ├── style.css
-│   └── js.js
+├── test_api.py         # pytest API & integration tests
+├── cypress/e2e/        # Cypress end-to-end tests
+├── cypress.config.js
+├── templates/          # layout.html, index.html, request.html
+├── static/             # css.css, js.js
 └── README.md
 ```
 
 ## Running locally
 
-Requires Python 3.
+Requires Python 3 and Node.js (for the Cypress tests).
 
 ```bash
-# install dependencies
-pip install flask pytest
-
-# run the app (creates the SQLite database on first run)
-python app.py
-
-# run the tests
-pytest -v
+pip install -r requirements.txt
+python app.py            # starts on http://127.0.0.1:5050
 ```
-
-Then open the address it prints (`http://127.0.0.1:5050`).
 
 ---
 
 *CS50 final project — a full-stack web application demonstrating REST API design,
-relational data modeling with enforced integrity constraints, server-side
-validation, and an automated pytest suite covering happy paths, business rules,
-and error cases.*
+relational data modeling with enforced integrity constraints, a third-party API
+integration with authentication and graceful failure handling, and automated
+testing at two layers (pytest backend mocks and Cypress frontend intercepts).*
