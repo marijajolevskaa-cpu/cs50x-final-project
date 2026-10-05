@@ -15,6 +15,9 @@ from typing import Any, Dict
 # Dict means "this is a dictionary" — used for the JSON payload from requests
 
 from flask import Flask, jsonify, request, render_template
+
+from ai_helper import suggest_request_improvements
+# Third-party AI integration — kept in its own module so it is easy to mock in tests
 # Flask — the web framework that runs the server and handles HTTP requests
 # jsonify — converts a Python dict into a proper JSON HTTP response
 # request — Flask's object containing everything about the incoming HTTP request
@@ -465,6 +468,23 @@ def create_poet_application():
             "rate": rate,
         },
     }), 201
+
+
+@app.post("/api/suggest-improvements")
+def suggest_improvements():
+    # Third-party AI integration: send a client's draft request to the LLM
+    # helper and return suggestions for making it clearer for poets.
+    payload: Dict[str, Any] = request.get_json(silent=True) or {}
+    occasion = str(payload.get("occasion", "")).strip()
+    tone = str(payload.get("tone", "")).strip()
+    detail = str(payload.get("detail", "")).strip()
+
+    try:
+        suggestions = suggest_request_improvements(occasion, tone, detail)
+        return jsonify({"ok": True, "suggestions": suggestions})
+    except RuntimeError as e:
+        # The AI service failed — return a clean 503 instead of crashing
+        return jsonify({"ok": False, "error": str(e)}), 503
 
 
 # ─── STARTUP ──────────────────────────────────────────────────────────────────

@@ -658,3 +658,34 @@ setRequestsPaginationVisibility(false);
 // Fetches all requests from the backend and renders them into both boards
 // This is what populates the page with data when it first loads
 refreshAllRequestBoards();
+
+// ─── AI SUGGESTIONS (third-party integration) ──────────────────────────────────
+const aiSuggestBtn = document.getElementById('ai-suggest-btn');
+const aiSuggestions = document.getElementById('ai-suggestions');
+
+if (aiSuggestBtn) {
+  aiSuggestBtn.addEventListener('click', async () => {
+    const occasion = requestForm.occasion.value.trim();
+    const tone = requestForm.tone.value.trim();
+    const detail = requestForm.detail.value.trim();
+
+    aiSuggestions.classList.remove('hidden');
+    aiSuggestions.textContent = 'Thinking…';
+
+    try {
+      const response = await fetch(`${API_BASE}/suggest-improvements`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ occasion, tone, detail }),
+      });
+      const data = await response.json();
+      if (data.ok) {
+        aiSuggestions.textContent = data.suggestions || 'No suggestions returned.';
+      } else {
+        aiSuggestions.textContent = 'Sorry, suggestions are unavailable right now.';
+      }
+    } catch (err) {
+      aiSuggestions.textContent = 'Sorry, suggestions are unavailable right now.';
+    }
+  });
+}
