@@ -169,3 +169,42 @@ def test_bid_from_nonexistent_poet_is_rejected(client):
         "amount": 40,
     })
     assert response.status_code == 404
+
+
+# ─── AI integration tests (mocked — no real API call) ────────────────────────
+
+from unittest.mock import patch
+
+
+def test_suggest_improvements_success(client):
+    # Mock the AI helper so no real API is called.
+    # Patch it where it's USED (in the app module), not where it's defined.
+    with patch("app.suggest_request_improvements") as mock_ai:
+        mock_ai.return_value = "Consider adding the recipient's name."
+
+        response = client.post("/api/suggest-improvements", json={
+            "occasion": "Birthday",
+            "tone": "warm",
+            "detail": "For my friend",
+        })
+
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data["ok"] is True
+        assert "recipient" in data["suggestions"]
+        mock_ai.assert_called_once()
+
+
+def test_suggest_improvements_handles_failure(client):
+    # Make the mock RAISE an error, simulating the AI service being down.
+    with patch("app.suggest_request_improvements") as mock_ai:
+        mock_ai.side_effect = RuntimeError("AI service returned status 500")
+
+        response = client.post("/api/suggest-improvements", json={
+            "occasion": "Birthday",
+            "tone": "warm",
+            "detail": "For my friend",
+        })
+
+        assert response.status_code == 503
+        assert response.get_json()["ok"] is False
