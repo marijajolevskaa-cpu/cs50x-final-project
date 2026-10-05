@@ -1,0 +1,23 @@
+{
+  "name": "cs50x-final-project",
+  "version": "1.0.0",
+  "description": "**A full-stack poetry marketplace that connects people who want a custom poem with poets who write them.**",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marijajolevskaa-cpu/cs50x-final-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/marijajolevskaa-cpu/cs50x-final-project/issues"
+  },
+  "homepage": "https://github.com/marijajolevskaa-cpu/cs50x-final-project#readme",
+  "devDependencies": {
+    "cypress": "^16.1.1"
+  }
+}
