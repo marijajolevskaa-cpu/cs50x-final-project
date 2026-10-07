@@ -1,0 +1,50 @@
+name: Cypress Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Get your code onto the CI machine
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up Python and install the Flask app's dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      # 3. Set up Node (needed for Cypress)
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 4. Start the Flask app in the background, run Cypress against it.
+      #    The Cypress GitHub Action handles installing Cypress, starting
+      #    the server, waiting for it to respond, then running the tests.
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          start: python app.py
+          wait-on: "http://127.0.0.1:5050"
+          wait-on-timeout: 60
+          browser: chrome
+
+      # 5. If a test fails, save screenshots so you can see what went wrong
+      - name: Upload screenshots on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          retention-days: 7
