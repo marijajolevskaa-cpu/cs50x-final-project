@@ -1,5 +1,7 @@
 # VerseSpace 🪶
 
+![Cypress Tests](https://github.com/marijajolevskaa-cpu/cs50x-final-project/actions/workflows/cypress.yml/badge.svg)
+
 **A full-stack poetry marketplace that connects people who want a custom poem with poets who write them.**
 
 ▶️ **[Watch the 2-minute demo](https://youtu.be/oF8zSlt8bOs)**
@@ -10,7 +12,7 @@ them. I built it as my CS50 final project to practise designing a complete
 application end to end — a relational database, a JSON REST API, and a reactive
 single-page interface — using Flask and vanilla JavaScript, with no front-end
 frameworks. It also includes a **third-party AI integration** and an automated test
-suite covering both the backend and the browser.
+suite covering both the backend and the browser, running in CI.
 
 ---
 
@@ -78,8 +80,8 @@ Correctness is enforced on the server, not just in the UI:
 
 ## Testing
 
-The project is tested at **two layers with two frameworks** — the way a real
-application is tested.
+The project is tested at **two layers with two frameworks**, and the end-to-end
+suite runs automatically in **CI** on every push.
 
 **Backend — pytest (`test_api.py`).** API tests using Flask's test client, each
 against a fresh temporary SQLite database for full isolation. Coverage includes:
@@ -96,6 +98,11 @@ a browser and use **`cy.intercept()`** to mock the AI API at the network level �
 testing that the interface shows the suggestions on success and a friendly message
 on failure, without any real service.
 
+**Continuous integration.** A GitHub Actions workflow
+(`.github/workflows/cypress.yml`) runs the Cypress suite on every push: it installs
+dependencies, **starts the Flask app, waits for it to be ready**, then runs the
+end-to-end tests against the live application.
+
 ```bash
 # backend tests
 pip install -r requirements.txt
@@ -104,7 +111,7 @@ pytest -v
 # frontend tests (app must be running in another terminal)
 npm install
 npx cypress open      # interactive runner
-# or: npx cypress run  # headless
+# or: npx cypress run  # headless (the way CI runs them)
 ```
 
 ## Tech stack
@@ -113,6 +120,7 @@ npx cypress open      # interactive runner
 **Frontend:** HTML · CSS · Vanilla JavaScript (async `fetch`, no frameworks)
 **Integration:** external LLM REST API (Bearer-token auth, env-var config)
 **Testing:** pytest · Flask test client · Cypress (`cy.intercept`)
+**CI:** GitHub Actions (starts the app, waits for readiness, runs E2E tests)
 
 ## REST API
 
@@ -137,14 +145,15 @@ the schema initialized from `schema.sql`. The `poem_bids` table enforces
 
 ```
 project/
-├── app.py              # Flask app + API routes
-├── ai_helper.py        # third-party LLM integration
-├── schema.sql          # database schema
-├── test_api.py         # pytest API & integration tests
-├── cypress/e2e/        # Cypress end-to-end tests
+├── app.py                  # Flask app + API routes
+├── ai_helper.py            # third-party LLM integration
+├── schema.sql              # database schema
+├── test_api.py             # pytest API & integration tests
+├── cypress/e2e/            # Cypress end-to-end tests
 ├── cypress.config.js
-├── templates/          # layout.html, index.html, request.html
-├── static/             # css.css, js.js
+├── .github/workflows/      # Cypress CI workflow
+├── templates/              # layout.html, index.html, request.html
+├── static/                 # css.css, js.js
 └── README.md
 ```
 
@@ -162,4 +171,5 @@ python app.py            # starts on http://127.0.0.1:5050
 *CS50 final project — a full-stack web application demonstrating REST API design,
 relational data modeling with enforced integrity constraints, a third-party API
 integration with authentication and graceful failure handling, and automated
-testing at two layers (pytest backend mocks and Cypress frontend intercepts).*
+testing at two layers (pytest backend mocks and Cypress frontend intercepts) with
+end-to-end tests running in CI.*
