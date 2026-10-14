@@ -222,3 +222,18 @@ def test_budget_below_minimum_is_rejected(client):
 
 def test_non_numeric_budget_is_rejected(client):
     assert make_request(client, budget="abc").status_code == 400
+
+
+def test_null_required_field_is_rejected(client):
+    response = client.post("/api/requests", json={
+        "occasion": None, "tone": "warm", "subject": "My friend",
+        "detail": "A detail", "budget": 40,
+    })
+    assert response.status_code == 400
+
+
+def test_null_poet_field_is_rejected(client):
+    response = client.post("/api/poets", json={
+        "name": None, "specialty": "Weddings", "sample": "A line", "rate": 30,
+    })
+    assert response.status_code == 400

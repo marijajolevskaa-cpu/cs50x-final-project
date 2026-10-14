@@ -105,6 +105,15 @@ def to_int(value: Any, default: int = 0) -> int:
         return default
 
 
+def to_text(value: Any) -> str:
+    # Converts a JSON value to a stripped string
+    # An explicit null becomes "" so it counts as missing
+    # Without this, str(None) would save the literal text "None"
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
 def json_error(message: str, status_code: int = 400):
     # Returns a consistent JSON error response as a (response, status) tuple
     # Flask handles tuples automatically — sends the response with the status code
@@ -372,13 +381,12 @@ def create_request():
     # Parses the JSON body sent by the JS form submit handler
     # Contains: occasion, tone, subject, detail, budget
 
-    occasion = str(payload.get("occasion", "")).strip()
-    # str() ensures it's a string even if null was sent
-    # .strip() removes leading/trailing whitespace
+    occasion = to_text(payload.get("occasion"))
+    # to_text() treats a missing key or null as "" and strips whitespace
     tone = str(payload.get("tone", "")).strip().lower()
     # .lower() normalises case so "Warm" and "warm" are treated the same
-    subject = str(payload.get("subject", "")).strip()
-    detail = str(payload.get("detail", "")).strip()
+    subject = to_text(payload.get("subject"))
+    detail = to_text(payload.get("detail"))
     budget = to_int(payload.get("budget"), None)
     # None when budget is missing or non-numeric — rejected below instead of defaulted
 
@@ -444,9 +452,9 @@ def create_poet_application():
 
     payload: Dict[str, Any] = request.get_json(silent=True) or {}
 
-    name = str(payload.get("name", "")).strip()
-    specialty = str(payload.get("specialty", "")).strip()
-    sample = str(payload.get("sample", "")).strip()
+    name = to_text(payload.get("name"))
+    specialty = to_text(payload.get("specialty"))
+    sample = to_text(payload.get("sample"))
     rate = max(10, to_int(payload.get("rate", 35), 35))
     # Minimum rate is €10 — enforced even if the JS sends a lower value
 
