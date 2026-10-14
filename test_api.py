@@ -262,3 +262,14 @@ def test_ai_reply_that_is_not_an_object_returns_503(client):
             "occasion": "Birthday", "tone": "warm", "detail": "x",
         })
     assert response.status_code == 503
+
+
+def test_ai_reply_with_non_string_text_returns_503(client):
+    fake = MagicMock()
+    fake.status_code = 200
+    fake.json.return_value = {"text": None}
+    with patch("ai_helper.requests.post", return_value=fake):
+        response = client.post("/api/suggest-improvements", json={
+            "occasion": "Birthday", "tone": "warm", "detail": "x",
+        })
+    assert response.status_code == 503

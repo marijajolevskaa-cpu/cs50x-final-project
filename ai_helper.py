@@ -57,4 +57,9 @@ def suggest_request_improvements(occasion: str, tone: str, detail: str) -> str:
         # Valid JSON but not an object (e.g. a list or string), so .get() would fail
         raise RuntimeError("AI service returned an unexpected response")
 
-    return data.get("text", "").strip()
+    text = data.get("text", "")
+    if not isinstance(text, str):
+        # "text" is null, a number, a list, etc., so .strip() would fail
+        raise RuntimeError("AI service returned an unexpected response")
+
+    return text.strip()
