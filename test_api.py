@@ -237,3 +237,28 @@ def test_null_poet_field_is_rejected(client):
         "name": None, "specialty": "Weddings", "sample": "A line", "rate": 30,
     })
     assert response.status_code == 400
+
+
+from unittest.mock import MagicMock
+
+
+def test_ai_reply_that_is_not_json_returns_503(client):
+    fake = MagicMock()
+    fake.status_code = 200
+    fake.json.side_effect = ValueError("not json")
+    with patch("ai_helper.requests.post", return_value=fake):
+        response = client.post("/api/suggest-improvements", json={
+            "occasion": "Birthday", "tone": "warm", "detail": "x",
+        })
+    assert response.status_code == 503
+
+
+def test_ai_reply_that_is_not_an_object_returns_503(client):
+    fake = MagicMock()
+    fake.status_code = 200
+    fake.json.return_value = ["not", "an", "object"]
+    with patch("ai_helper.requests.post", return_value=fake):
+        response = client.post("/api/suggest-improvements", json={
+            "occasion": "Birthday", "tone": "warm", "detail": "x",
+        })
+    assert response.status_code == 503

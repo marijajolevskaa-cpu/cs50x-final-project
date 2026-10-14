@@ -47,5 +47,14 @@ def suggest_request_improvements(occasion: str, tone: str, detail: str) -> str:
         raise RuntimeError(f"AI service returned status {response.status_code}")
 
     # Parse the JSON response and extract the suggestions
-    data = response.json()
+    try:
+        data = response.json()
+    except ValueError:
+        # Body wasn't valid JSON — wrap it so the caller returns a 503
+        raise RuntimeError("AI service returned an invalid response")
+
+    if not isinstance(data, dict):
+        # Valid JSON but not an object (e.g. a list or string), so .get() would fail
+        raise RuntimeError("AI service returned an unexpected response")
+
     return data.get("text", "").strip()
