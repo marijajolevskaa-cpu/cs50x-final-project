@@ -213,3 +213,12 @@ def test_suggest_improvements_handles_failure(client):
 def test_budget_above_maximum_is_rejected(client):
     response = make_request(client, budget=501)
     assert response.status_code == 400
+
+
+def test_budget_below_minimum_is_rejected(client):
+    assert make_request(client, budget=4).status_code == 400
+    assert make_request(client, budget=0).status_code == 400
+
+
+def test_non_numeric_budget_is_rejected(client):
+    assert make_request(client, budget="abc").status_code == 400
