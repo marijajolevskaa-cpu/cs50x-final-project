@@ -394,6 +394,9 @@ def create_request():
         return json_error("Recipient is required.")
     if not detail:
         return json_error("A key memory/detail is required.")
+    if budget > 500:
+        return json_error("Budget cannot be more than €500.")
+        # Rejected rather than clamped so the client knows the request was not saved
 
     total_price = budget
     # total_price equals budget directly

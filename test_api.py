@@ -208,3 +208,8 @@ def test_suggest_improvements_handles_failure(client):
 
         assert response.status_code == 503
         assert response.get_json()["ok"] is False
+
+
+def test_budget_above_maximum_is_rejected(client):
+    response = make_request(client, budget=501)
+    assert response.status_code == 400
