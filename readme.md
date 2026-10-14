@@ -32,9 +32,8 @@ more than another single-user CRUD app would have.
 personal details, and budget. The request is saved and appears immediately on a
 shared, paginated requests board — no page reload.
 
-**Poets** register with their name, email, specialty, a writing sample, and a
-starting rate, then browse open requests and place a single bid on any they'd like
-to write.
+**Poets** register with their name, specialty, a writing sample, and a starting
+rate, then browse open requests and place a single bid on any they'd like to write.
 
 Every interaction — submitting a request, registering, bidding — happens
 asynchronously through the API and updates the interface in place.
@@ -75,8 +74,35 @@ Correctness is enforced on the server, not just in the UI:
 - **One bid per poet per request** — guaranteed by a `UNIQUE (request_id, poet_id)`
   constraint, with an application-level check returning a clean `409 Conflict`.
 - **Foreign keys with cascade deletes**, enforced on every connection.
-- **Server-side validation** — required fields, an allowlist of valid tones, and
-  minimum budget/bid amounts, all checked on the authoritative backend.
+- **Server-side validation** — required fields (including explicit `null` values),
+  an allowlist of valid tones, a request budget between €5 and €500 (rejected, not
+  silently adjusted), and a minimum bid amount, all checked on the authoritative
+  backend.
+- **Graceful AI failures** — if the AI service errors, times out, or replies with
+  something unusable, the endpoint returns a clean `503` instead of crashing.
+
+## Checking the code against the requirements
+
+`docs/requirements.md` lists what VerseSpace is supposed to do. A small Claude Code
+skill (`.claude/skills/verse-gap-check`) reads that list and the code, and reports
+each requirement as implemented, partial, missing, or unverified, citing the file and
+line behind every verdict. It only reads; it never edits anything.
+
+Running it found four real gaps, and each was fixed with the same loop: write a
+failing test, confirm it fails, make the smallest fix, confirm the suite passes, and
+commit. The gaps were a budget limit enforced only in the browser, `null` values
+saved as the text "None", and two ways a bad AI reply caused a `500` instead of a `503`.
+
+The skill's verdicts changed between runs even when the code didn't, so its findings
+are leads to check with tests, not proof.
+
+## Known issues
+
+Found by the gap check and not fixed yet:
+- A poet rate below €10 is silently raised to €10 instead of being rejected.
+- The registration form has an email field that is never sent or stored.
+- The pages may show a success message after the server rejected a submission (to be
+  confirmed and fixed).
 
 ## Testing
 
@@ -151,6 +177,8 @@ project/
 ├── test_api.py             # pytest API & integration tests
 ├── cypress/e2e/            # Cypress end-to-end tests
 ├── cypress.config.js
+├── docs/requirements.md    # what the app should do
+├── .claude/skills/         # verse-gap-check skill
 ├── .github/workflows/      # Cypress CI workflow
 ├── templates/              # layout.html, index.html, request.html
 ├── static/                 # css.css, js.js
