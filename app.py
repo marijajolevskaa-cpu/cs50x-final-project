@@ -379,8 +379,8 @@ def create_request():
     # .lower() normalises case so "Warm" and "warm" are treated the same
     subject = str(payload.get("subject", "")).strip()
     detail = str(payload.get("detail", "")).strip()
-    budget = max(5, to_int(payload.get("budget", 5), 5))
-    # max(5, ...) enforces the minimum budget of €5
+    budget = to_int(payload.get("budget"), None)
+    # None when budget is missing or non-numeric — rejected below instead of defaulted
 
     # Validate every required field
     # Flask stops executing the function as soon as a return is hit
@@ -394,6 +394,11 @@ def create_request():
         return json_error("Recipient is required.")
     if not detail:
         return json_error("A key memory/detail is required.")
+    if budget is None:
+        return json_error("Budget is required and must be a number.")
+    if budget < 5:
+        return json_error("Budget must be at least €5.")
+        # Rejected rather than clamped, like the €500 check below
     if budget > 500:
         return json_error("Budget cannot be more than €500.")
         # Rejected rather than clamped so the client knows the request was not saved
