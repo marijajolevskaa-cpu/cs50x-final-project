@@ -83,22 +83,15 @@ Correctness is enforced on the server, not just in the UI:
 
 ## Checking the code against the requirements
 
-`docs/requirements.md` lists what VerseSpace is supposed to do. A small Claude Code
-skill (`.claude/skills/verse-gap-check`) reads that list and the code, and reports
-each requirement as implemented, partial, missing, or unverified, citing the file and
-line behind every verdict. It only reads; it never edits anything.
-
-Running it found four real gaps, and each was fixed with the same loop: write a
+`docs/requirements.md` lists what VerseSpace is supposed to do. Comparing that list
+with the code turned up four real gaps, and each was fixed with the same loop: write a
 failing test, confirm it fails, make the smallest fix, confirm the suite passes, and
 commit. The gaps were a budget limit enforced only in the browser, `null` values
 saved as the text "None", and two ways a bad AI reply caused a `500` instead of a `503`.
 
-The skill's verdicts changed between runs even when the code didn't, so its findings
-are leads to check with tests, not proof.
-
 ## Known issues
 
-Found by the gap check and not fixed yet:
+Not fixed yet:
 - A poet rate below €10 is silently raised to €10 instead of being rejected.
 - The registration form has an email field that is never sent or stored.
 - The pages may show a success message after the server rejected a submission (to be
@@ -178,7 +171,6 @@ project/
 ├── cypress/e2e/            # Cypress end-to-end tests
 ├── cypress.config.js
 ├── docs/requirements.md    # what the app should do
-├── .claude/skills/         # verse-gap-check skill
 ├── .github/workflows/      # Cypress CI workflow
 ├── templates/              # layout.html, index.html, request.html
 ├── static/                 # css.css, js.js
